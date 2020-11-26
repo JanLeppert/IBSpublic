@@ -29,8 +29,8 @@ params = Dict(
                 :retention_difference => "Δϑchar",  # ["Δϑchar", "Δlnk", "Δk"]
                 :char_model => "f(ϑchar)",          # ["f(ϑchar)", "value"]
                 :comparison => "ξ₀",                # ["ξ₀", "ϑ(þ₀)", "no adjustment"]
-                :abstol => 1e-12,                    # 1e-8
-                :reltol => 1e-9                     # 1e-5
+                :abstol => 1e-8,                    # 1e-8
+                :reltol => 1e-5                     # 1e-5
 )
 
 Ndict = dict_list_count(params)

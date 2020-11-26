@@ -1,6 +1,6 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JanLeppert/IBS/HEAD?filepath=%2Fnotebooks%2FTGGCibs.ipynb)
 
-# IBS
+# IBSpublic
 
 This code base is using the Julia Language and [DrWatson](https://juliadynamics.github.io/DrWatson.jl/stable/)
 to make a reproducible scientific project named
@@ -22,7 +22,7 @@ To (locally) reproduce this project, do the following:
 This will install all necessary packages for you to be able to run the scripts and
 everything should work out of the box.
 
-## Project discription
+## Project description
 
 This project is supplementary material to the paper "Simulation of ideal basic separations in gas chromatography with negative temperature gradients" by Jan Leppert, Leonid M. Blumberg, Matthias Wüst and Peter Boeker.
 

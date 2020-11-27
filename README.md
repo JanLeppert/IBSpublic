@@ -1,4 +1,4 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JanLeppert/IBS/HEAD?filepath=%2Fnotebooks%2FTGGCibs.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JanLeppert/IBSpublic/HEAD?filepath=%2Fnotebooks%2FTGGCibs.ipynb)
 
 # IBSpublic
 

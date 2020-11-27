@@ -196,14 +196,14 @@ end
 function makesim(d::Dict)
     @unpack gT, rT, ϑ₀, h, ϑchar, char, C, Δϑchar, s₀, guM, P, retention_model, retention_difference, char_model, comparison, abstol, reltol, L, tM = d
     # initilize the parameter structure
-    sys = IBS.System(rT, gT, ϑ₀, guM, P)
+    sys = IBSpublic.System(rT, gT, ϑ₀, guM, P)
     if char_model=="f(ϑchar)" 
-        sub = IBS.Substance(h, ϑchar, NaN, C, Δϑchar, s₀)
+        sub = IBSpublic.Substance(h, ϑchar, NaN, C, Δϑchar, s₀)
     elseif char_model=="value"
-        sub = IBS.Substance(h, ϑchar, char, C, Δϑchar, s₀)
+        sub = IBSpublic.Substance(h, ϑchar, char, C, Δϑchar, s₀)
     end
-    options = IBS.Options(retention_model, retention_difference, char_model, comparison)
-    par = IBS.ParTripletIBS(sys,sub,options)
+    options = IBSpublic.Options(retention_model, retention_difference, char_model, comparison)
+    par = IBSpublic.ParTripletIBS(sys,sub,options)
     # simulation
     solþξ = Array{Any}(undef, 3)
     sols²ξ = Array{Any}(undef, 3)
@@ -214,31 +214,31 @@ function makesim(d::Dict)
         #----------------------------------------------------------------------------------------------------------------- 
         if gT==0 && s₀==0
             for i=1:3
-                solþξ[i] = IBS.solving_migration(par, n=i-2, ξ₀=zero, abs_tol=abstol, rel_tol=reltol)
-                sols²ξ[i] = IBS.solving_bandvariance(solþξ[i], par, n=i-2, ξ₀=zero, abs_tol=abstol, rel_tol=reltol)
+                solþξ[i] = IBSpublic.solving_migration(par, n=i-2, ξ₀=zero, abs_tol=abstol, rel_tol=reltol)
+                sols²ξ[i] = IBSpublic.solving_bandvariance(solþξ[i], par, n=i-2, ξ₀=zero, abs_tol=abstol, rel_tol=reltol)
             end
-            ξ₀func = IBS.trajectory(solþξ[2], ntraj=10000)
+            ξ₀func = IBSpublic.trajectory(solþξ[2], ntraj=10000)
         else
             # solve for non-IBS with adapted temperature program with
             # trajectory of solute "0" in the reference separation
             # (gT=0, s₀=0) of the middle solute "0"
             # initilize the parameter structure for reference separation
-            sys_ref = IBS.System(rT, 0, ϑ₀, guM, P)
+            sys_ref = IBSpublic.System(rT, 0, ϑ₀, guM, P)
             if char_model=="f(ϑchar)" 
-                sub_ref = IBS.Substance(h, ϑchar, NaN, C, Δϑchar, 0)
+                sub_ref = IBSpublic.Substance(h, ϑchar, NaN, C, Δϑchar, 0)
             elseif char_model=="value"
-                sub_ref = IBS.Substance(h, ϑchar, char, C, Δϑchar, 0)
+                sub_ref = IBSpublic.Substance(h, ϑchar, char, C, Δϑchar, 0)
             end
-            options_ref = IBS.Options(retention_model, retention_difference, char_model, comparison)
-            par_ref = IBS.ParTripletIBS(sys_ref,sub_ref,options_ref)
+            options_ref = IBSpublic.Options(retention_model, retention_difference, char_model, comparison)
+            par_ref = IBSpublic.ParTripletIBS(sys_ref,sub_ref,options_ref)
             # 1. simulation without gradient
-            solþξ_ref = IBS.solving_migration(par_ref, n=0, ξ₀=zero, abs_tol=abstol, rel_tol=reltol)
+            solþξ_ref = IBSpublic.solving_migration(par_ref, n=0, ξ₀=zero, abs_tol=abstol, rel_tol=reltol)
             # 2. trajectory
-            ξ₀func = IBS.trajectory(solþξ_ref, ntraj=10000)
+            ξ₀func = IBSpublic.trajectory(solþξ_ref, ntraj=10000)
             # 3. & 4. non-IBS simulation
             for i=1:3
-                solþξ[i] = IBS.solving_migration(par, n=i-2, ξ₀=ξ₀func, abs_tol=abstol, rel_tol=reltol)
-                sols²ξ[i] = IBS.solving_bandvariance(solþξ[i], par, n=i-2, ξ₀=ξ₀func, abs_tol=abstol, rel_tol=reltol)
+                solþξ[i] = IBSpublic.solving_migration(par, n=i-2, ξ₀=ξ₀func, abs_tol=abstol, rel_tol=reltol)
+                sols²ξ[i] = IBSpublic.solving_bandvariance(solþξ[i], par, n=i-2, ξ₀=ξ₀func, abs_tol=abstol, rel_tol=reltol)
             end
         end
     elseif comparison=="ϑ(þ₀)"
@@ -250,8 +250,8 @@ function makesim(d::Dict)
         # no adjustment of the temperature program
         #-----------------------------------------------
         for i=1:3
-            solþξ[i] = IBS.solving_migration(par, n=i-2, abs_tol=abstol, rel_tol=reltol)
-            sols²ξ[i] = IBS.solving_bandvariance(solþξ[i], par, n=i-2, abs_tol=abstol, rel_tol=reltol)
+            solþξ[i] = IBSpublic.solving_migration(par, n=i-2, abs_tol=abstol, rel_tol=reltol)
+            sols²ξ[i] = IBSpublic.solving_bandvariance(solþξ[i], par, n=i-2, abs_tol=abstol, rel_tol=reltol)
         end
     end
     # export the results and add them to the parameters
@@ -268,16 +268,16 @@ function makesim(d::Dict)
     fulld[:sRa] = sqrt(sols²ξ[1].u[end])
     fulld[:sR0] = sqrt(sols²ξ[2].u[end])
     fulld[:sRb] = sqrt(sols²ξ[3].u[end])
-    fulld[:νRa] = IBS.velocity(1, solþξ[1].u[end], par, n=-1, ξ₀=ξ₀func(solþξ[1].u[end]), tM=IBS.holduptime(guM, P))
-    fulld[:νR0] = IBS.velocity(1, solþξ[2].u[end], par, n= 0, ξ₀=ξ₀func(solþξ[2].u[end]), tM=IBS.holduptime(guM, P))
-    fulld[:νRb] = IBS.velocity(1, solþξ[3].u[end], par, n=+1, ξ₀=ξ₀func(solþξ[3].u[end]), tM=IBS.holduptime(guM, P))
-    fulld[:ðRa] = sqrt(sols²ξ[1].u[end])/IBS.velocity(1, solþξ[1].u[end], par, n=-1, ξ₀=ξ₀func(solþξ[1].u[end]), tM=IBS.holduptime(guM, P))
-    fulld[:ðR0] = sqrt(sols²ξ[2].u[end])/IBS.velocity(1, solþξ[2].u[end], par, n= 0, ξ₀=ξ₀func(solþξ[2].u[end]), tM=IBS.holduptime(guM, P))
-    fulld[:ðRb] = sqrt(sols²ξ[3].u[end])/IBS.velocity(1, solþξ[3].u[end], par, n=+1, ξ₀=ξ₀func(solþξ[3].u[end]), tM=IBS.holduptime(guM, P))
+    fulld[:νRa] = IBSpublic.velocity(1, solþξ[1].u[end], par, n=-1, ξ₀=ξ₀func(solþξ[1].u[end]), tM=IBSpublic.holduptime(guM, P))
+    fulld[:νR0] = IBSpublic.velocity(1, solþξ[2].u[end], par, n= 0, ξ₀=ξ₀func(solþξ[2].u[end]), tM=IBSpublic.holduptime(guM, P))
+    fulld[:νRb] = IBSpublic.velocity(1, solþξ[3].u[end], par, n=+1, ξ₀=ξ₀func(solþξ[3].u[end]), tM=IBSpublic.holduptime(guM, P))
+    fulld[:ðRa] = sqrt(sols²ξ[1].u[end])/IBSpublic.velocity(1, solþξ[1].u[end], par, n=-1, ξ₀=ξ₀func(solþξ[1].u[end]), tM=IBSpublic.holduptime(guM, P))
+    fulld[:ðR0] = sqrt(sols²ξ[2].u[end])/IBSpublic.velocity(1, solþξ[2].u[end], par, n= 0, ξ₀=ξ₀func(solþξ[2].u[end]), tM=IBSpublic.holduptime(guM, P))
+    fulld[:ðRb] = sqrt(sols²ξ[3].u[end])/IBSpublic.velocity(1, solþξ[3].u[end], par, n=+1, ξ₀=ξ₀func(solþξ[3].u[end]), tM=IBSpublic.holduptime(guM, P))
     fulld[:ΔþR] = solþξ[3].u[end]-solþξ[1].u[end]
-    fulld[:ðR] = (sqrt(sols²ξ[1].u[end])/IBS.velocity(1, solþξ[1].u[end], par, n=-1, ξ₀=ξ₀func(solþξ[1].u[end]), tM=IBS.holduptime(guM, P))+sqrt(sols²ξ[3].u[end])/IBS.velocity(1, solþξ[3].u[end], par, n=+1, ξ₀=ξ₀func(solþξ[3].u[end]), tM=IBS.holduptime(guM, P)))/2
-    fulld[:RS] = (solþξ[3].u[end]-solþξ[1].u[end])/(4*(sqrt(sols²ξ[1].u[end])/IBS.velocity(1, solþξ[1].u[end], par, n=-1, ξ₀=ξ₀func(solþξ[1].u[end]), tM=IBS.holduptime(guM, P))+sqrt(sols²ξ[3].u[end])/IBS.velocity(1, solþξ[3].u[end], par, n=+1, ξ₀=ξ₀func(solþξ[3].u[end]), tM=IBS.holduptime(guM, P)))/2)
-    fulld[:þM] = IBS.holduptime(guM, P)
+    fulld[:ðR] = (sqrt(sols²ξ[1].u[end])/IBSpublic.velocity(1, solþξ[1].u[end], par, n=-1, ξ₀=ξ₀func(solþξ[1].u[end]), tM=IBSpublic.holduptime(guM, P))+sqrt(sols²ξ[3].u[end])/IBSpublic.velocity(1, solþξ[3].u[end], par, n=+1, ξ₀=ξ₀func(solþξ[3].u[end]), tM=IBSpublic.holduptime(guM, P)))/2
+    fulld[:RS] = (solþξ[3].u[end]-solþξ[1].u[end])/(4*(sqrt(sols²ξ[1].u[end])/IBSpublic.velocity(1, solþξ[1].u[end], par, n=-1, ξ₀=ξ₀func(solþξ[1].u[end]), tM=IBSpublic.holduptime(guM, P))+sqrt(sols²ξ[3].u[end])/IBSpublic.velocity(1, solþξ[3].u[end], par, n=+1, ξ₀=ξ₀func(solþξ[3].u[end]), tM=IBSpublic.holduptime(guM, P)))/2)
+    fulld[:þM] = IBSpublic.holduptime(guM, P)
     fulld[:ξ₀func] = ξ₀func
     return fulld
 end
@@ -629,10 +629,10 @@ function plot_program(simres, unit, srT, sgT, sTchar)
     k = findfirst(ϑchar.==sTchar[])
     j0 = findfirst(gT.==0)
 
-	sys = IBS.System(params[:rT][i],params[:gT][j],params[:ϑ₀][],0,params[:P][end])
-	sub = IBS.Substance(params[:h][],params[:ϑchar][k],NaN,0,params[:Δϑchar][],params[:s₀][end])
-	opt = IBS.Options("ideal","Δϑchar","f(ϑchar)","ξ₀")
-    p = IBS.ParTripletIBS(sys,sub,opt)
+	sys = IBSpublic.System(params[:rT][i],params[:gT][j],params[:ϑ₀][],0,params[:P][end])
+	sub = IBSpublic.Substance(params[:h][],params[:ϑchar][k],NaN,0,params[:Δϑchar][],params[:s₀][end])
+	opt = IBSpublic.Options("ideal","Δϑchar","f(ϑchar)","ξ₀")
+    p = IBSpublic.ParTripletIBS(sys,sub,opt)
     # filter simres 
     df = filter([:gT, :rT, :ϑchar, :P, :s₀] => (gT, rT, ϑchar, P, s₀) 
                 ->  gT==params[:gT][j] && 
@@ -655,15 +655,15 @@ function plot_program(simres, unit, srT, sgT, sTchar)
 	T0 = Array{Float64}(undef, length(þ0))
 	Tb = Array{Float64}(undef, length(þb))
     for ii=1:length(þb)
-        Ttop[ii] = IBS.temperature(0,þb[ii],p,ξ₀=ξ₀(þb[ii]))-273.15/θ
-        Tbottom[ii] = IBS.temperature(1,þb[ii],p,ξ₀=ξ₀(þb[ii]))-273.15/θ
-        Tb[ii] = IBS.temperature(ξb[ii],þb[ii],p,ξ₀=ξ₀(þb[ii]))-273.15/θ
+        Ttop[ii] = IBSpublic.temperature(0,þb[ii],p,ξ₀=ξ₀(þb[ii]))-273.15/θ
+        Tbottom[ii] = IBSpublic.temperature(1,þb[ii],p,ξ₀=ξ₀(þb[ii]))-273.15/θ
+        Tb[ii] = IBSpublic.temperature(ξb[ii],þb[ii],p,ξ₀=ξ₀(þb[ii]))-273.15/θ
     end
     for ii=1:length(þa)
-		Ta[ii] = IBS.temperature(ξa[ii],þa[ii],p,ξ₀=ξ₀(þa[ii]))-273.15/θ
+		Ta[ii] = IBSpublic.temperature(ξa[ii],þa[ii],p,ξ₀=ξ₀(þa[ii]))-273.15/θ
     end
     for ii=1:length(þ0)
-        T0[ii] = IBS.temperature(ξ0[ii],þ0[ii],p,ξ₀=ξ₀(þ0[ii]))-273.15/θ
+        T0[ii] = IBSpublic.temperature(ξ0[ii],þ0[ii],p,ξ₀=ξ₀(þ0[ii]))-273.15/θ
     end
     pTemp = plot(title=latexstring("\\textrm{Fig. 2b) Program}"), titlefontsize=10, legend=:outertopright)
     

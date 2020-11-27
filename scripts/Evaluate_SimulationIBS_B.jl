@@ -10,7 +10,7 @@
 using DrWatson
 @quickactivate "IBSpublic"
 DrWatson.greet()
-using IBS
+using IBSpublic
 using DataFrames, GRUtils, Interpolations, RecursiveArrayTools
 include("script_functions.jl") 
 

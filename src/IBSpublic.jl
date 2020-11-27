@@ -1,4 +1,4 @@
-module IBS
+module IBSpublic
 # using the module developed in github "TemperatureGradientGCibs.jl" 
 # from 29.10.2020 (Branch 'dimensionless', commit 'include an old version of Solving.jl', fc4fc4c)
 

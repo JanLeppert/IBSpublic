@@ -9,7 +9,7 @@
 using DrWatson
 @quickactivate "IBSpublic"
 DrWatson.greet()
-using IBS
+using IBSpublic
 using DataFrames
 
 params = Dict(
@@ -36,14 +36,14 @@ dicts = dict_list(params)
 function makesim(d::Dict)
     @unpack gT, rT, ϑ₀, h, ϑchar, char, C, Δϑchar, s₀, guM, P, retention_model, retention_difference, char_model, comparison = d
     # initilize the parameter structure
-    sys = IBS.System(rT, gT, ϑ₀, guM, P)
+    sys = IBSpublic.System(rT, gT, ϑ₀, guM, P)
     if char_model=="f(ϑchar)" 
-        sub = IBS.Substance(h, ϑchar, NaN, C, Δϑchar, s₀)
+        sub = IBSpublic.Substance(h, ϑchar, NaN, C, Δϑchar, s₀)
     elseif char_model=="value"
-        sub = IBS.Substance(h, ϑchar, char, C, Δϑchar, s₀)
+        sub = IBSpublic.Substance(h, ϑchar, char, C, Δϑchar, s₀)
     end
-    options = IBS.Options(retention_model, retention_difference, char_model, comparison)
-    par = IBS.ParTripletIBS(sys,sub,options)
+    options = IBSpublic.Options(retention_model, retention_difference, char_model, comparison)
+    par = IBSpublic.ParTripletIBS(sys,sub,options)
     # simulation
     solþξ = Array{Any}(undef, 3)
     sols²ξ = Array{Any}(undef, 3)
@@ -55,33 +55,33 @@ function makesim(d::Dict)
         #----------------------------------------------------------------------------------------------------------------- 
         if gT==0 && guM==0 && P==1 && s₀==0
             for i=1:3
-                solþξ[i] = IBS.solving_migration(par, n=i-2, ξ₀=zero)
-                sols²ξ[i] = IBS.solving_bandvariance(solþξ[i], par, n=i-2, ξ₀=zero)
-                solð²ξ[i] = IBS.solving_peakvariance(solþξ[i], par, n=i-2, ξ₀=zero)
+                solþξ[i] = IBSpublic.solving_migration(par, n=i-2, ξ₀=zero)
+                sols²ξ[i] = IBSpublic.solving_bandvariance(solþξ[i], par, n=i-2, ξ₀=zero)
+                solð²ξ[i] = IBSpublic.solving_peakvariance(solþξ[i], par, n=i-2, ξ₀=zero)
             end
-            ξ₀func = IBS.trajectory(solþξ[2], ntraj=10000)
+            ξ₀func = IBSpublic.trajectory(solþξ[2], ntraj=10000)
         else
             # solve for non-IBS with adapted temperature program with
             # trajectory of solute "0" in the IBS
             # Ideal Basic Separation Solution (gT=0, s₀=0, guM=0, P=0) of the middle solute "0"
             # initilize the parameter structure for IBS
-            sys_IBS = IBS.System(rT, 0, ϑ₀, 0, 1)
+            sys_IBS = IBSpublic.System(rT, 0, ϑ₀, 0, 1)
             if char_model=="f(ϑchar)" 
-                sub_IBS = IBS.Substance(h, ϑchar, NaN, C, Δϑchar, 0)
+                sub_IBS = IBSpublic.Substance(h, ϑchar, NaN, C, Δϑchar, 0)
             elseif char_model=="value"
-                sub_IBS = IBS.Substance(h, ϑchar, char, C, Δϑchar, 0)
+                sub_IBS = IBSpublic.Substance(h, ϑchar, char, C, Δϑchar, 0)
             end
-            options_IBS = IBS.Options(retention_model, retention_difference, char_model, comparison)
-            par_IBS = IBS.ParTripletIBS(sys_IBS,sub_IBS,options_IBS)
+            options_IBS = IBSpublic.Options(retention_model, retention_difference, char_model, comparison)
+            par_IBS = IBSpublic.ParTripletIBS(sys_IBS,sub_IBS,options_IBS)
             # simulation of IBS
-            solþξ_IBS = IBS.solving_migration(par_IBS, n=0, ξ₀=zero)
+            solþξ_IBS = IBSpublic.solving_migration(par_IBS, n=0, ξ₀=zero)
             # trajectory
-            ξ₀func = IBS.trajectory(solþξ_IBS, ntraj=10000)
+            ξ₀func = IBSpublic.trajectory(solþξ_IBS, ntraj=10000)
             # non-IBS simulation
             for i=1:3
-                solþξ[i] = IBS.solving_migration(par, n=i-2, ξ₀=ξ₀func)
-                sols²ξ[i] = IBS.solving_bandvariance(solþξ[i], par, n=i-2, ξ₀=ξ₀func)
-                solð²ξ[i] = IBS.solving_peakvariance(solþξ[i], par, n=i-2, ξ₀=ξ₀func)
+                solþξ[i] = IBSpublic.solving_migration(par, n=i-2, ξ₀=ξ₀func)
+                sols²ξ[i] = IBSpublic.solving_bandvariance(solþξ[i], par, n=i-2, ξ₀=ξ₀func)
+                solð²ξ[i] = IBSpublic.solving_peakvariance(solþξ[i], par, n=i-2, ξ₀=ξ₀func)
             end
         end
     elseif comparison=="ϑ(þ₀)"
@@ -93,9 +93,9 @@ function makesim(d::Dict)
         # no adjustment of the temperature program
         #-----------------------------------------------
         for i=1:3
-            solþξ[i] = IBS.solving_migration(par, n=i-2)
-            sols²ξ[i] = IBS.solving_bandvariance(solþξ[i], par, n=i-2)
-            solð²ξ[i] = IBS.solving_peakvariance(solþξ[i], par, n=i-2)
+            solþξ[i] = IBSpublic.solving_migration(par, n=i-2)
+            sols²ξ[i] = IBSpublic.solving_bandvariance(solþξ[i], par, n=i-2)
+            solð²ξ[i] = IBSpublic.solving_peakvariance(solþξ[i], par, n=i-2)
         end
     end
     # export the results and add them to the parameters
@@ -109,7 +109,7 @@ function makesim(d::Dict)
     fulld[:solð²ξ_a] = DataFrame(solð²ξ[1])
     fulld[:solð²ξ_0] = DataFrame(solð²ξ[2])
     fulld[:solð²ξ_b] = DataFrame(solð²ξ[3])
-    fulld[:þM] = IBS.holduptime(guM, P)
+    fulld[:þM] = IBSpublic.holduptime(guM, P)
     fulld[:ξ₀func] = ξ₀func
     return fulld
 end

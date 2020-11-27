@@ -15,10 +15,10 @@ function add_quant!(df::DataFrame)
     par = Array{Any}(undef, size(df)[1])
     for i=1:size(df)[1]
         # parameter
-        sys = IBS.System(df.rT[i], df.gT[i], df.ϑ₀[i], df.guM[i], df.P[i])
-        sub = IBS.Substance(df.h[i], df.ϑchar[i], df.char[i], df.C[i], df.Δϑchar[i], df.s₀[i])
-        opt = IBS.Options(df.retention_model[i], df.retention_difference[i], df.char_model[i], df.comparison[i])
-        par[i] = IBS.ParTripletIBS(sys,sub,opt)
+        sys = IBSpublic.System(df.rT[i], df.gT[i], df.ϑ₀[i], df.guM[i], df.P[i])
+        sub = IBSpublic.Substance(df.h[i], df.ϑchar[i], df.char[i], df.C[i], df.Δϑchar[i], df.s₀[i])
+        opt = IBSpublic.Options(df.retention_model[i], df.retention_difference[i], df.char_model[i], df.comparison[i])
+        par[i] = IBSpublic.ParTripletIBS(sys,sub,opt)
         # dimensionless retention times
         df.þRa[i] = df.solþξ_a[i].value[end]
         df.þR0[i] = df.solþξ_0[i].value[end]
@@ -32,9 +32,9 @@ function add_quant!(df::DataFrame)
         df.ðR0[i] = sqrt(df.solð²ξ_0[i].value[end])
         df.ðRb[i] = sqrt(df.solð²ξ_b[i].value[end])
         # elution solute velocity
-        df.υRa[i] = IBS.velocity(1, df.þRa[i], par[i], n=-1, ξ₀=df.ξ₀func[i](df.þRa[i]), tM=df.þM[i])
-        df.υR0[i] = IBS.velocity(1, df.þR0[i], par[i], n= 0, ξ₀=df.ξ₀func[i](df.þR0[i]), tM=df.þM[i])
-        df.υRb[i] = IBS.velocity(1, df.þRb[i], par[i], n=+1, ξ₀=df.ξ₀func[i](df.þRb[i]), tM=df.þM[i])
+        df.υRa[i] = IBSpublic.velocity(1, df.þRa[i], par[i], n=-1, ξ₀=df.ξ₀func[i](df.þRa[i]), tM=df.þM[i])
+        df.υR0[i] = IBSpublic.velocity(1, df.þR0[i], par[i], n= 0, ξ₀=df.ξ₀func[i](df.þR0[i]), tM=df.þM[i])
+        df.υRb[i] = IBSpublic.velocity(1, df.þRb[i], par[i], n=+1, ξ₀=df.ξ₀func[i](df.þRb[i]), tM=df.þM[i])
     end
     # retention time difference
     df[!, :ΔþR] = df.þRb .- df.þRa

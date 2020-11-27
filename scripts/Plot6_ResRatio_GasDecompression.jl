@@ -6,7 +6,7 @@ using DataFrames, GRUtils, Interpolations, RecursiveArrayTools, Dierckx, CSV
 include("script_functions.jl") 
 
 # load the simulation data 
-df0 = collect_results(datadir("simulation", "SimulationIBS_B_Pvar", "12"))
+df0 = collect_results(datadir("simulation", "SimulationIBS_B_Pvar"))
 
 # filter for certain values
 rT_s = 10.0^(-0.4)

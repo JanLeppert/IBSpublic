@@ -13,16 +13,16 @@ function parameters(unitopt)#, uMgrad, sinit)
         tMtxt = latex("t_M [\\textrm{s}]")
         tMvalue = "40.0"
 		Ptxt = latex("P")
-        T0txt = latex("T_0/θ")
+        T0txt = latex("\\vartheta_{init}")
         T0value = "1"
         rTtxt = latex("r_T")
-		rTvalue = "10.0 .^(-3:1:1)"
+		rTvalue = "[0.001,0.01,0.1,1,10]"
         gTtxt = latex("g_T")
-        gTvalue = "-10:1:0"
-        Tchartxt = latex("T_{char,0}/θ ")
+        gTvalue = "[-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0]"
+        Tchartxt = latex("\\vartheta_{char,0} ")
         Tcharvalue = "[-1,0,1,2,4,6]"
         ΔCptxt = latex("ΔCp [\\textrm{J}/(\\textrm{mol K})]")
-        Δtxt = latex("ΔT_{char}/θ")
+        Δtxt = latex("Δ \\vatheta_{char}")
         Δvalue = "1/300"
 		s0txt = latex("\\sigma_{init}/L")
     elseif unitopt==true #"with units"
@@ -34,12 +34,12 @@ function parameters(unitopt)#, uMgrad, sinit)
         tMtxt = latex("t_M [\\textrm{s}]")
         tMvalue = "40.0"
 		Ptxt = latex("P [-]")
-        T0txt = latex("T_0 [\\degree \\textrm{C}]")
+        T0txt = latex("T_{init} [\\degree \\textrm{C}]")
         T0value = "30"
         rTtxt = latex("R_T [\\degree \\textrm{C}/\\textrm{s}]")
-		rTvalue = string("(10.0 .^(-3:1:1)).*(30.0/", tMvalue, ")")
+		rTvalue = "[0.001,0.01,0.1,1,5]"
         gTtxt = latex("G_T [\\degree \\textrm{C}/\\textrm{m}]")
-        gTvalue="-20:2:0"
+        gTvalue="[-20,-18,-16,-14,-12,-10,-8,-6,-4,-2,0]"
         Tchartxt = latex("T_{char} [\\degree \\textrm{C}]")
         Tcharvalue = "[-30,0,30,60,120,180]"
         ΔCptxt = latex("ΔCp [\\textrm{J}/(\\textrm{mol K})]")
@@ -299,18 +299,30 @@ function simulation(uipar)
 			error("$(Meta.parse(uipar[][:T0][])) not >=-8. Choose a value >=-8 for parameter T0.")
 		end
 		if minimum(eval(Meta.parse(uipar[][:rT][]))) > 0.0001 && maximum(eval(Meta.parse(uipar[][:rT][]))) <=10
-			rT = eval(Meta.parse(uipar[][:rT][]))
+			if !isa(eval(Meta.parse(uipar[][:rT][])), Array)
+                rT = [eval(Meta.parse(uipar[][:rT][]))]
+            else
+                rT = eval(Meta.parse(uipar[][:rT][]))
+            end
 		else
 			error("$(Meta.parse(uipar[][:rT][])) not between 0.0001 and 10. Choose a range with 0.0001<=values<=10 for parameter rT.")
 		end
-		if minimum(eval(Meta.parse(uipar[][:gT][]))) >= -10 && maximum(eval(Meta.parse(uipar[][:gT][]))) <=0
-			gT = eval(Meta.parse(uipar[][:gT][]))
+		if minimum(eval(Meta.parse(uipar[][:gT][])))>=-10 && maximum(eval(Meta.parse(uipar[][:gT][])))==0
+            if !isa(eval(Meta.parse(uipar[][:gT][])), Array)
+                gT = [eval(Meta.parse(uipar[][:gT][]))]
+            else
+                gT = eval(Meta.parse(uipar[][:gT][]))
+            end
 		else
-			error("$(Meta.parse(uipar[][:gT][])) not between -10 and 0. Choose a range with -10<=values<=0 for parameter gT.")
-		end
+			error("$(Meta.parse(uipar[][:gT][])) not between -10 and 0, including 0. Choose a range with -10<=values<=0 for parameter gT. Include 0 to the range of gT.")
+        end
 		# range for Tchar should depend on value of T0
 		if minimum(eval(Meta.parse(uipar[][:Tchar][]))) >= -2 && maximum(eval(Meta.parse(uipar[][:Tchar][]))) <=8
-			ϑchar = eval(Meta.parse(uipar[][:Tchar][]))
+            if !isa(eval(Meta.parse(uipar[][:Tchar][])), Array)
+                ϑchar = [eval(Meta.parse(uipar[][:Tchar][]))]
+            else
+                ϑchar = eval(Meta.parse(uipar[][:Tchar][]))
+            end
 		else
 			error("$(Meta.parse(uipar[][:Tchar][])) not between -2 and 8. Choose a range with -2<=values<=8 for parameter Tchar.")
 		end
@@ -334,6 +346,7 @@ function simulation(uipar)
 			error("$(Meta.parse(uipar[][:s0][])) not >0. Choose a value >0 for parameter s0.")
         end
         params = Dict(
+                        :unit => uipar[:unit][],
                         :gT => collect(gT),
                         :rT => collect(rT),
                         :ϑ₀ => T0,
@@ -376,17 +389,29 @@ function simulation(uipar)
 			error("$(Meta.parse(uipar[][:T0][])) not >=-240°C. Choose a value >=-240°C for parameter T0.")
 		end
 		if minimum(eval(Meta.parse(uipar[][:rT][])))*tM/θ >= 0.0001 && maximum(eval(Meta.parse(uipar[][:rT][])))*tM/θ <=10
-			rT = eval(Meta.parse(uipar[][:rT][]))*tM/θ
+            if !isa(eval(Meta.parse(uipar[][:rT][])), Array)
+                rT = [eval(Meta.parse(uipar[][:rT][]))*tM/θ]
+            else
+                rT = eval(Meta.parse(uipar[][:rT][]))*tM/θ
+            end
 		else
 			error("$(eval(Meta.parse(uipar[][:rT][]))) not between $(0.0001*θ/tM) and $(10*θ/tM). Choose a range with $(0.0001*θ/tM)<=values<=$(10*θ/tM) for parameter rT.")
 		end
 		if minimum(eval(Meta.parse(uipar[][:gT][]))*L/θ) >= -10 && maximum(eval(Meta.parse(uipar[][:gT][]))*L/θ) ==0
-			gT = eval(Meta.parse(uipar[][:gT][]))*L/θ
+            if !isa(eval(Meta.parse(uipar[][:gT][])), Array)
+                gT = [eval(Meta.parse(uipar[][:gT][]))*L/θ]
+            else
+                gT = eval(Meta.parse(uipar[][:gT][]))*L/θ
+            end
 		else
-			error("$(Meta.parse(uipar[][:gT][])) not between $(-10*θ/L)°C/m and 0°C/m. Choose a range with $(-10*θ/L)°C/m<=values<=0°C/m for parameter gT. The last element must be 0.")
+			error("$(Meta.parse(uipar[][:gT][])) not between $(-10*θ/L)°C/m and 0°C/m, including 0°C/m. Choose a range with $(-10*θ/L)°C/m<=values<=0°C/m for parameter gT.  Include 0 to the range of gT.")
 		end
 		if minimum(eval(Meta.parse(uipar[][:Tchar][]))/θ) >= -2 && maximum(eval(Meta.parse(uipar[][:Tchar][]))/θ) <=8
-			ϑchar = eval(Meta.parse(uipar[][:Tchar][]))/θ
+            if !isa(eval(Meta.parse(uipar[][:Tchar][])), Array)
+                ϑchar = [eval(Meta.parse(uipar[][:Tchar][]))/θ]
+            else
+                ϑchar = eval(Meta.parse(uipar[][:Tchar][]))/θ
+            end
 		else
 			error("$(Meta.parse(uipar[][:Tchar][])) not between $(-2*θ) and $(8*θ). Choose a range with $(-2*θ)<=values<=$(8*θ) for parameter Tchar.")
 		end
@@ -410,6 +435,7 @@ function simulation(uipar)
 			error("$(Meta.parse(uipar[][:s0][])) not >0. Choose a value >0 for parameter s0.")
         end
         params = Dict(
+                        :unit => uipar[:unit][],
                         :gT => collect(gT),#.*L/θ,
                         :rT => collect(rT),#.*tM/θ,
                         :ϑ₀ => T0,#/θ,
@@ -443,6 +469,7 @@ end
 #-------------------------------------------------------------------------------
 # extract the important parameters from simres and put them in a dict
 function param_dict(simres)
+    unit = sort(unique(simres.unit))
     gT = sort(unique(simres.gT))
     rT = sort(unique(simres.rT))
     ϑ₀ = sort(unique(simres.ϑ₀))
@@ -455,6 +482,7 @@ function param_dict(simres)
     tM = sort(unique(simres.tM))
     
     params = Dict(
+                        :unit => unit,
                         :gT => collect(gT),
                         :rT => collect(rT),
                         :ϑ₀ => ϑ₀,
@@ -472,7 +500,7 @@ end
 # plot chromatogram, temperature program, performance ratios and resolution
 function plot_chrom_prog(simres)
     params = param_dict(simres)
-    ui0=@manipulate for unit in checkbox(label="quantities with SI-unnits")
+    ui0=@manipulate for unit in checkbox(params[:unit][], label="quantities with SI-unnits")
         if unit==false#"dimensionless"
             lbl_rT = latex("r_T")
             lbl_gT = latex("-g_T")
@@ -792,7 +820,7 @@ end
 # show the peaklist
 function peaklist(simres)
     params = param_dict(simres)
-    ui0=@manipulate for unit in checkbox(label="quantities with SI-unnits")
+    ui0=@manipulate for unit in checkbox(params[:unit][], label="quantities with SI-unnits")
         if unit==false#"dimensionless"
             lbl_rT = latex("r_T")
             lbl_gT = latex("-g_T")
@@ -902,7 +930,7 @@ end
 # plot resolution ratio
 function plot_resolution_ratio(simres)
     params = param_dict(simres) 
-    ui0 = @manipulate for unit in checkbox(label="quantities with SI-unnits")
+    ui0 = @manipulate for unit in checkbox(value=params[:unit][], label="quantities with SI-unnits")
         if unit==false#"dimensionless"
             lbl_rT = latex("r_T")
             lbl_gT = latex("-g_T")
